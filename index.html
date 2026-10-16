@@ -1,0 +1,211 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>감자지옥.exe</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#101010;color:#b6ff64;
+ font-family:system-ui,sans-serif;overflow-x:hidden;
+ text-align:center;min-height:100vh;
+}
+header{padding:25px 10px 10px}
+h1{font-size:clamp(30px,8vw,55px);margin:0;
+ text-shadow:0 0 20px #83ff39}
+.subtitle{color:#ff5374;font-weight:bold}
+#arena{
+ position:relative;overflow:hidden;
+ margin:12px auto;width:min(94%,650px);
+ height:290px;background:#1a1a1a;
+ border:2px solid #4b6034;border-radius:15px;
+}
+#screen{padding:10px}
+#potatoCount{font-size:14px;color:#ddd}
+button{
+ background:#b6ff64;color:#111;border:0;
+ border-radius:10px;padding:13px 16px;
+ font-size:15px;font-weight:900;cursor:pointer;
+ transition:transform .1s;touch-action:manipulation;
+}
+button:active{transform:scale(.95)}
+.controls{
+ width:min(94%,450px);margin:15px auto;
+ display:grid;grid-template-columns:1fr 1fr;gap:10px
+}
+.controls button{min-height:55px}
+.danger{background:#ff5270}
+.secondary{background:#333;color:white}
+#runaway{position:absolute;left:40%;top:45%;
+ background:#ff5270;color:white;z-index:2}
+.potato{
+ position:absolute;font-size:34px;cursor:pointer;
+ user-select:none;animation:fall 2.5s linear forwards;
+ z-index:1
+}
+@keyframes fall{
+ from{transform:translateY(-60px) rotate(0deg)}
+ to{transform:translateY(400px) rotate(650deg)}
+}
+.pop{
+ position:fixed;z-index:20;background:#ddd;color:#111;
+ border:3px outset white;width:240px;padding:12px;
+ box-shadow:5px 5px 0 #000;text-align:left;
+ animation:appear .12s ease-out
+}
+.pop button{padding:5px 12px;background:#ddd;
+ border:2px outset white;border-radius:0;float:right}
+@keyframes appear{
+ from{transform:scale(.4) rotate(-5deg)}
+ to{transform:scale(1) rotate(0)}
+}
+#chaos{
+ position:fixed;inset:0;pointer-events:none;z-index:10;
+ border:0 solid #b6ff64
+}
+#escapeScreen{
+ display:none;position:fixed;inset:0;z-index:100;
+ background:#000;color:#b6ff64;
+ align-items:center;justify-content:center;
+ flex-direction:column;padding:25px
+}
+#escapeScreen h2{font-size:38px}
+#escapeScreen button{margin-top:15px}
+footer{color:#666;font-size:12px;padding:15px}
+</style>
+</head>
+<body>
+<header>
+ <h1>🥔 감자지옥.exe</h1>
+ <p class="subtitle">⚠ 감자 농도 위험 수준 ⚠</p>
+ <p style="color:#aaa">아무 버튼이나 누르지 마시오.</p>
+</header>
+
+<div id="arena">
+ <div id="screen">
+  <div style="font-size:65px;margin-top:25px">🖥️</div>
+  <p id="message">시스템 정상. 감자 없음.</p>
+  <div id="potatoCount">감자: 0개 | 혼돈: 0%</div>
+ </div>
+ <button id="runaway" onclick="runaway()">나 잡아 봐라</button>
+</div>
+
+<div class="controls">
+ <button onclick="rain()">🥔 감자 뿌리기</button>
+ <button onclick="explosion()">💣 감자 대폭발</button>
+ <button class="secondary" onclick="fireErrors()">🪟 오류창 소환</button>
+ <button class="secondary" onclick="runaway()">🏃 버튼 잡기</button>
+ <button class="danger" onclick="escape()">🚪 튕겨 나가기</button>
+ <button class="secondary" onclick="resetGame()">🧹 감자 청소</button>
+</div>
+
+<div id="chaos"></div>
+<div id="escapeScreen">
+ <h2>🚪 튕겨 나왔습니다.</h2>
+ <p>감자지옥.exe가 당신을 거부했습니다.</p>
+ <p id="escapeText">감자들이 축제를 시작했습니다.</p>
+ <button onclick="returnBack()">다시 입장하기</button>
+</div>
+<footer>감자지옥.exe © 감자 연합 · 모든 감자는 허구입니다</footer>
+
+<script>
+let potatoes=0, chaos=0, errors=0;
+const arena=document.getElementById('arena');
+const message=document.getElementById('message');
+const count=document.getElementById('potatoCount');
+const runawayBtn=document.getElementById('runaway');
+const potatoEls=[];
+const errorEls=[];
+
+function update(text){
+ message.textContent=text;
+ count.textContent=`감자: ${potatoes}개 | 혼돈: ${Math.min(chaos,100)}%`;
+ document.body.style.background=
+ chaos>=50 && Math.random()<.4 ? '#201020':'#101010';
+}
+function potato(x,y){
+ const p=document.createElement('div');
+ p.className='potato';
+ p.textContent=['🥔','🍟','🫠','💀'][Math.floor(Math.random()*4)];
+ p.style.left=x+'px';p.style.top=y+'px';
+ arena.appendChild(p);potatoEls.push(p);
+ p.onclick=()=>{
+  p.remove();potatoes=Math.max(0,potatoes-1);
+  chaos+=3;update('감자가 비명을 지르며 퇴장했습니다.');
+ };
+ p.addEventListener('animationend',()=>p.remove());
+}
+function rain(){
+ const n=12+Math.floor(Math.random()*9);
+ for(let i=0;i<n;i++){
+  potato(Math.random()*(arena.clientWidth-35),
+   -Math.random()*180);
+ }
+ potatoes+=n;chaos+=8;
+ update('감자 투하 완료. 농부가 퇴사했습니다.');
+}
+function explosion(){
+ const n=35;
+ for(let i=0;i<n;i++){
+  potato(Math.random()*(arena.clientWidth-35),
+   Math.random()*(arena.clientHeight-20));
+ }
+ potatoes+=n;chaos+=20;
+ update('💥 감자 대폭발!!! 감자 재난 문자 발송!');
+ arena.animate([
+  {transform:'translateX(-5px)'},
+  {transform:'translateX(5px)'},
+  {transform:'translateX(-5px)'},
+  {transform:'translateX(0)'}
+ ],{duration:250,iterations:3});
+}
+function runaway(){
+ const maxX=Math.max(0,arena.clientWidth-runawayBtn.offsetWidth);
+ const maxY=Math.max(0,arena.clientHeight-runawayBtn.offsetHeight);
+ runawayBtn.style.left=Math.random()*maxX+'px';
+ runawayBtn.style.top=Math.random()*maxY+'px';
+ chaos+=2;update('ㅋㅋㅋ 버튼이 도망갔습니다.');
+}
+function fireErrors(){
+ const n=Math.min(3+Math.floor(Math.random()*3),12-errors);
+ if(n<=0){update('오류창 한도 도달. 컴퓨터도 지쳤습니다.');return;}
+ for(let i=0;i<n;i++){
+  const pop=document.createElement('div');
+  pop.className='pop';
+  pop.style.left=Math.max(0,Math.random()*(innerWidth-250))+'px';
+  pop.style.top=Math.max(0,Math.random()*(innerHeight-150))+'px';
+  pop.innerHTML='<b>⚠ 감자 시스템 오류</b><hr>'+
+   '감자.exe가 감자를 이해하지 못했습니다.'+
+   '<p>오류 코드: POTATO_404</p>';
+  const close=document.createElement('button');
+  close.textContent='X';
+  close.onclick=()=>{pop.remove();errors--;};
+  pop.appendChild(close);
+  document.body.appendChild(pop);errorEls.push(pop);
+  errors++;
+ }
+ chaos+=12;update('오류가 발생했습니다. 해결 방법: 감자.');
+}
+function escape(){
+ document.getElementById('escapeScreen').style.display='flex';
+ document.getElementById('escapeText').textContent=
+  '당신은 감자지옥에서 추방되었습니다. 감자 수: '+potatoes;
+ chaos+=15;
+}
+function returnBack(){
+ document.getElementById('escapeScreen').style.display='none';
+ update('탈출 실패! 감자지옥에 다시 오신 걸 환영합니다.');
+}
+function resetGame(){
+ potatoEls.splice(0).forEach(p=>p.remove());
+ errorEls.splice(0).forEach(p=>p.remove());
+ errors=0;potatoes=0;chaos=0;
+ runawayBtn.style.left='40%';runawayBtn.style.top='45%';
+ document.body.style.background='#101010';
+ update('청소 완료. 감자 한 알이 남아 있을지도 모릅니다.');
+}
+</script>
+</body>
+</html>
